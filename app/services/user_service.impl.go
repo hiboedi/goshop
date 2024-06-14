@@ -67,6 +67,19 @@ func (s *UserServiceImpl) Update(ctx context.Context, request models.UserUpdate)
 	return models.ToUserReponse(data)
 }
 
+func (s *UserServiceImpl) Delete(ctx context.Context, userId string) {
+	tx := s.DB.Begin()
+	defer helpers.CommitOrRollback(tx)
+
+	user, err := s.UserRepo.FindById(ctx, tx, userId)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	err = s.UserRepo.Delete(ctx, tx, user)
+	helpers.PanicIfError(err)
+}
+
 func (s *UserServiceImpl) Login(ctx context.Context, request models.UserLogin) (models.UserLoginResponse, bool) {
 	err := s.Validate.Struct(request)
 	helpers.PanicIfError(err)

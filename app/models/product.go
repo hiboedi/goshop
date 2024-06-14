@@ -8,14 +8,23 @@ import (
 )
 
 type Product struct {
-	ID          string    `json:"id" gorm:"type:uuid;primary_key;not null;uniqueIndex"`
-	UserId      string    `json:"user_id" gorm:"index"`
-	Name        string    `json:"name" gorm:"unique;varchar(100);not null"`
-	Price       float64   `json:"price" gorm:"not null"`
-	Description string    `json:"description" gorm:"not null;type:text"`
-	Stock       int32     `json:"stock" gorm:"not null;default:0"`
-	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt   time.Time `json:"updated_at" gorm:"autoCreateTime;autoUpdateTime"`
+	ID            string         `json:"id" gorm:"primary_key;not null;uniqueIndex"`
+	ParentID      string         `json:"parent_id" gorm:"size:36;index"`
+	User          User           `json:"user"`
+	UserId        string         `json:"user_id" gorm:"index"`
+	ProductImages []ProductImage `json:"product_images"`
+	Categories    []Category     `json:"categories" gorm:"many2many:product_categories;"`
+	Name          string         `json:"name" gorm:"unique;varchar(100);not null"`
+	Price         float64        `json:"price" gorm:"not null"`
+	Description   string         `json:"description" gorm:"not null;type:text"`
+	Stock         int32          `json:"stock" gorm:"not null;default:0"`
+	Sku           string         `json:"sku" gorm:"size:100;index"`
+	Slug          string         `json:"slug" gorm:"size:255"`
+	Weight        float64        `json:"weight" gorm:"type:decimal(10,2);"`
+	Status        int            `json:"status" gorm:"default:0"`
+	CreatedAt     time.Time      `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt     time.Time      `json:"updated_at" gorm:"autoCreateTime;autoUpdateTime"`
+	DeletedAt     gorm.DeletedAt
 }
 
 type ProductResponse struct {

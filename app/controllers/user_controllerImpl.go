@@ -3,11 +3,11 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/hiboedi/zenshop/app/helpers"
 	"github.com/hiboedi/zenshop/app/models"
 	"github.com/hiboedi/zenshop/app/services"
 	"github.com/hiboedi/zenshop/app/web"
-	"github.com/julienschmidt/httprouter"
 )
 
 type UserControllerImpl struct {
@@ -20,7 +20,7 @@ func NewUserController(userService services.UserService) UserController {
 	}
 }
 
-func (c *UserControllerImpl) Create(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func (c *UserControllerImpl) Create(w http.ResponseWriter, r *http.Request) {
 	userCreateRequest := models.UserCreate{}
 	helpers.ToRequestBody(r, &userCreateRequest)
 
@@ -35,12 +35,12 @@ func (c *UserControllerImpl) Create(w http.ResponseWriter, r *http.Request, para
 	http.Redirect(w, r, "/api/users/login", http.StatusOK)
 }
 
-func (c *UserControllerImpl) Update(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func (c *UserControllerImpl) Update(w http.ResponseWriter, r *http.Request) {
 	userUpdateRequest := models.UserUpdate{}
 	helpers.ToRequestBody(r, &userUpdateRequest)
 
-	userId := params.ByName("userId")
-
+	vars := mux.Vars(r)
+	userId := vars["userId"]
 	userUpdateRequest.ID = userId
 
 	userResponse := c.UserService.Update(r.Context(), userUpdateRequest)
@@ -53,7 +53,21 @@ func (c *UserControllerImpl) Update(w http.ResponseWriter, r *http.Request, para
 	helpers.WriteResponseBody(w, webResponse)
 }
 
-func (c *UserControllerImpl) Login(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func (c *UserControllerImpl) Delete(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	userId := vars["userId"]
+
+	c.UserService.Delete(r.Context(), userId)
+	webResponse := web.WebResponse{
+		Code:   http.StatusOK,
+		Status: "Ok",
+	}
+
+	helpers.WriteResponseBody(w, webResponse)
+}
+
+func (c *UserControllerImpl) Login(w http.ResponseWriter, r *http.Request) {
 	userLogin := models.UserLogin{}
 	helpers.ToRequestBody(r, &userLogin)
 
@@ -73,4 +87,15 @@ func (c *UserControllerImpl) Login(w http.ResponseWriter, r *http.Request, param
 		}
 		helpers.WriteResponseBody(w, webResponse)
 	}
+}
+
+func (c *UserControllerImpl) Logout(w http.ResponseWriter, r *http.Request) {
+	helpers.DeleteCookieHandler(w, r)
+
+	webResponse := web.WebResponse{
+		Code:   http.StatusPermanentRedirect,
+		Status: "Redirect",
+	}
+	helpers.WriteResponseBody(w, webResponse)
+	http.Redirect(w, r, "/api/users/login", http.StatusPermanentRedirect)
 }

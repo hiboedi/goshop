@@ -48,6 +48,12 @@ func Migrate() {
 		&models.Product{},
 		&models.User{},
 		&models.Order{},
+		&models.Address{},
+		&models.Section{},
+		&models.Category{},
+		&models.ProductImage{},
+		&models.Cart{},
+		&models.CartItem{},
 	)
 	helpers.PanicIfError(err)
 

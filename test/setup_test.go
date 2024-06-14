@@ -51,7 +51,11 @@ func SetUpRouter() http.Handler {
 	orderService := services.NewOrderService(orderRepo, db, validate)
 	orderController := controllers.NewOrderController(orderService)
 
-	router := router.RouterInit(productController, userController, orderController)
+	addressRepo := repository.NewAddressRepo(userRepo)
+	addressService := services.NewAddressService(addressRepo, db, validate)
+	addressController := controllers.NewAddressController(addressService)
+
+	router := router.RouterInit(productController, userController, orderController, addressController)
 	Migrate()
 
 	return middleware.NewAuthMiddleware(router)

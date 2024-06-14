@@ -5,6 +5,7 @@ import "time"
 type User struct {
 	ID        string    `json:"id" gorm:"not null;uniqueIndex;primary_key"`
 	Name      string    `json:"name" gorm:"not null;min:4;max:50"`
+	Addresses []Address `json:"addresses" gorm:"foreignKey:UserID"`
 	Email     string    `json:"username" gorm:"not null;unique"`
 	Password  string    `json:"password" gorm:"not null;min:6;max:50"`
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`

@@ -3,11 +3,11 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/hiboedi/zenshop/app/helpers"
 	"github.com/hiboedi/zenshop/app/models"
 	"github.com/hiboedi/zenshop/app/services"
 	"github.com/hiboedi/zenshop/app/web"
-	"github.com/julienschmidt/httprouter"
 )
 
 type OrderControllerImpl struct {
@@ -20,12 +20,13 @@ func NewOrderController(orderService services.OrderService) OrderController {
 	}
 }
 
-func (c *OrderControllerImpl) Create(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func (c *OrderControllerImpl) Create(w http.ResponseWriter, r *http.Request) {
 	orderCreateRequest := models.OrderCreate{}
 	helpers.ToRequestBody(r, &orderCreateRequest)
 	cookie, err := helpers.GetCookie(w, r)
 	if err != nil {
-		http.Redirect(w, r, "/api/users/login", http.StatusBadRequest)
+		http.Redirect(w, r, "/api/users/login", http.StatusPermanentRedirect)
+		return
 	}
 	userID := cookie.Value
 	orderCreateRequest.UserID = userID
@@ -40,12 +41,12 @@ func (c *OrderControllerImpl) Create(w http.ResponseWriter, r *http.Request, par
 	helpers.WriteResponseBody(w, webResponse)
 }
 
-func (c *OrderControllerImpl) Update(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func (c *OrderControllerImpl) Update(w http.ResponseWriter, r *http.Request) {
 	orderUpdateRequest := models.OrderUpdate{}
 	helpers.ToRequestBody(r, &orderUpdateRequest)
 
-	orderId := params.ByName("orderId")
-
+	vars := mux.Vars(r)
+	orderId := vars["orderId"]
 	orderUpdateRequest.ID = orderId
 
 	orderResponse := c.OrderService.Update(r.Context(), orderUpdateRequest)
@@ -58,8 +59,9 @@ func (c *OrderControllerImpl) Update(w http.ResponseWriter, r *http.Request, par
 	helpers.WriteResponseBody(w, webResponse)
 }
 
-func (c *OrderControllerImpl) Delete(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	orderId := params.ByName("orderId")
+func (c *OrderControllerImpl) Delete(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	orderId := vars["orderId"]
 
 	c.OrderService.Delete(r.Context(), orderId)
 	webResponse := web.WebResponse{
@@ -69,18 +71,20 @@ func (c *OrderControllerImpl) Delete(w http.ResponseWriter, r *http.Request, par
 	helpers.WriteResponseBody(w, webResponse)
 }
 
-func (c *OrderControllerImpl) FindById(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	orderId := params.ByName("orderId")
-	orderResponses := c.OrderService.FindById(r.Context(), orderId)
-	werbResponse := web.WebResponse{
+func (c *OrderControllerImpl) FindById(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	orderId := vars["orderId"]
+
+	orderResponse := c.OrderService.FindById(r.Context(), orderId)
+	webResponse := web.WebResponse{
 		Code:   http.StatusOK,
 		Status: "Ok",
-		Data:   orderResponses,
+		Data:   orderResponse,
 	}
-	helpers.WriteResponseBody(w, werbResponse)
+	helpers.WriteResponseBody(w, webResponse)
 }
 
-func (c *OrderControllerImpl) FindAll(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func (c *OrderControllerImpl) FindAll(w http.ResponseWriter, r *http.Request) {
 	orderResponses := c.OrderService.FindAll(r.Context())
 	webResponse := web.WebResponse{
 		Code:   http.StatusOK,
@@ -89,7 +93,8 @@ func (c *OrderControllerImpl) FindAll(w http.ResponseWriter, r *http.Request, pa
 	}
 	helpers.WriteResponseBody(w, webResponse)
 }
-func (c *OrderControllerImpl) FindAllOrByPaymentStatus(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+
+func (c *OrderControllerImpl) FindAllOrByPaymentStatus(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status")
 
 	if status != "" {

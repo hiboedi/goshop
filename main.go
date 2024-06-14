@@ -8,6 +8,7 @@ import (
 	"github.com/hiboedi/zenshop/app/controllers"
 	"github.com/hiboedi/zenshop/app/database"
 	"github.com/hiboedi/zenshop/app/helpers"
+	"github.com/hiboedi/zenshop/app/middleware"
 	"github.com/hiboedi/zenshop/app/repository"
 	"github.com/hiboedi/zenshop/app/router"
 	"github.com/hiboedi/zenshop/app/services"
@@ -29,12 +30,16 @@ func main() {
 	orderService := services.NewOrderService(orderRepo, db, validate)
 	orderController := controllers.NewOrderController(orderService)
 
-	router := router.RouterInit(productController, userController, orderController)
+	addressRepo := repository.NewAddressRepo(userRepo)
+	addressService := services.NewAddressService(addressRepo, db, validate)
+	addressController := controllers.NewAddressController(addressService)
+
+	router := router.RouterInit(productController, userController, orderController, addressController)
 	database.Migrate()
 
 	server := http.Server{
 		Addr:    "localhost:8000",
-		Handler: router,
+		Handler: middleware.NewAuthMiddleware(router),
 	}
 	fmt.Println("starting on port :8000")
 

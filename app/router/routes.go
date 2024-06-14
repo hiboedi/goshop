@@ -1,30 +1,39 @@
 package router
 
 import (
+	"github.com/gorilla/mux"
 	"github.com/hiboedi/zenshop/app/controllers"
-	"github.com/hiboedi/zenshop/app/exception"
-	"github.com/julienschmidt/httprouter"
+	"github.com/hiboedi/zenshop/app/middleware"
 )
 
-func RouterInit(productController controllers.ProductController, userController controllers.UserController, orderController controllers.OrderController) *httprouter.Router {
-	router := httprouter.New()
-	router.GET("/api/products", productController.FindAll)
-	router.GET("/api/products/:productId", productController.FindById)
-	router.POST("/api/products", productController.Create)
-	router.PUT("/api/products/:productId", productController.Update)
-	router.DELETE("/api/products/:productId", productController.Delete)
+func RouterInit(productController controllers.ProductController, userController controllers.UserController, orderController controllers.OrderController, addressController controllers.AddressController) *mux.Router {
+	router := mux.NewRouter()
 
-	router.POST("/api/users/login", userController.Login)
-	router.POST("/api/users", userController.Create)
-	router.PUT("/api/users/:userId", userController.Update)
+	router.HandleFunc("/api/users/login", userController.Login).Methods("POST")
+	router.HandleFunc("/api/users", userController.Create).Methods("POST")
+	router.HandleFunc("/api/users/{userId}", userController.Update).Methods("PUT")
 
-	router.POST("/api/orders", orderController.Create)
-	router.PUT("/api/orders/:orderId", orderController.Update)
-	router.DELETE("/api/orders/:orderId", orderController.Delete)
-	router.GET("/api/orders/:orderId", orderController.FindById)
-	router.GET("/api/orders", orderController.FindAllOrByPaymentStatus)
+	router.HandleFunc("/api/users/addresses", addressController.Create).Methods("POST")
+	router.HandleFunc("/api/users/addresses", addressController.FindByUserId).Methods("GET")
+	router.HandleFunc("/api/users/addresses/{addressId}", addressController.Delete).Methods("DELETE")
+	router.HandleFunc("/api/users/addresses/{addressId}", addressController.Update).Methods("PUT")
+	router.HandleFunc("/api/users/addresses/{addressId}", addressController.FindById).Methods("GET")
 
-	router.PanicHandler = exception.ErrorHandler
+	router.HandleFunc("/api/products", productController.FindAll).Methods("GET")
+	router.HandleFunc("/api/products/{productId}", productController.FindById).Methods("GET")
+	router.HandleFunc("/api/products", productController.Create).Methods("POST")
+	router.HandleFunc("/api/products/{productId}", productController.Update).Methods("PUT")
+	router.HandleFunc("/api/products/{productId}", productController.Delete).Methods("DELETE")
+
+	router.HandleFunc("/api/orders", orderController.Create).Methods("POST")
+	router.HandleFunc("/api/orders/{orderId}", orderController.Update).Methods("PUT")
+	router.HandleFunc("/api/orders/{orderId}", orderController.Delete).Methods("DELETE")
+	router.HandleFunc("/api/orders/{orderId}", orderController.FindById).Methods("GET")
+	router.HandleFunc("/api/orders", orderController.FindAllOrByPaymentStatus).Methods("GET")
+
+	// Error handling middleware can be added as needed
+
+	router.Use(middleware.RecoverMiddleware)
 
 	return router
 }

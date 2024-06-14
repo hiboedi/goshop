@@ -3,6 +3,8 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/hiboedi/zenshop/app/exception"
 )
 
 type AuthMiddleware struct {
@@ -44,4 +46,15 @@ func (middleware *AuthMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Reque
 
 	// Jika token valid, lanjutkan pemrosesan permintaan
 	middleware.Handler.ServeHTTP(w, r)
+}
+
+func RecoverMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				exception.ErrorHandler(w, r, err)
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
 }

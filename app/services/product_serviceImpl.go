@@ -79,6 +79,7 @@ func (s *ProductServiceImpl) Delete(ctx context.Context, prroductId string) {
 
 	err = s.ProductRepo.Delete(ctx, tx, product)
 	helpers.PanicIfError(err)
+
 }
 
 func (s *ProductServiceImpl) FindById(ctx context.Context, productId string) models.ProductResponse {

@@ -52,6 +52,15 @@ func (r *UserRepositoryImpl) FindById(ctx context.Context, db *gorm.DB, userId s
 	return user, nil
 }
 
+func (r *UserRepositoryImpl) Delete(ctx context.Context, db *gorm.DB, user models.User) error {
+
+	var userModel = models.User{}
+	err := db.WithContext(ctx).Model(&userModel).Delete(&user).Error
+	helpers.PanicIfError(err)
+
+	return nil
+}
+
 func (r *UserRepositoryImpl) FindByEmail(ctx context.Context, db *gorm.DB, email string) (models.User, error) {
 	var user models.User
 	err := db.WithContext(ctx).Where("email = ?", email).Take(&user).Error
